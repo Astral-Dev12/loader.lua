@@ -1,80 +1,67 @@
 local PlaceId = game.PlaceId
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local player = Players.LocalPlayer
 
--- Notification function
-local function Notify(title, text, duration)
+-- simple notification
+local function notify(title, msg, time)
     game.StarterGui:SetCore("SendNotification", {
         Title = title,
-        Text = text,
-        Duration = duration or 5
+        Text = msg,
+        Duration = time or 5
     })
 end
 
--- Game ID to Script URL mapping
-local Games = {
-    -- Murder Mystery 2
-    [142823291] = {
-        Name = "Murder Mystery 2",
-        ScriptUrl = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/mm2.lua"
-    },
-    
-    -- 99 Nights
-    [79546208627805] = {
-        Name = "99 Nights",
-        ScriptUrl = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/99nights.lua"
-    },
-    
-    -- Forge (wordl1)
-    [76558904092080] = {
-        Name = "Forge",
-        ScriptUrl = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/forge.lua"
-    }
-
-   -- Forge (wordl2)
-    [129009554587176] = {
-        Name = "Forge",
-        ScriptUrl = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/forge.lua"
-    }
-
-    -- Blox Fruits - Sea 1 (First Sea)
-    [2753915549] = {
-        Name = "Blox Fruits",
-        ScriptUrl = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
-    },
-    
-    -- Blox Fruits - Sea 2 (Second Sea)
-    [4442272183] = {
-        Name = "Blox Fruits",
-        ScriptUrl = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
-    },
-    
-    -- Blox Fruits - Sea 3 (Third Sea)
-    [7449423635] = {
-        Name = "Blox Fruits",
-        ScriptUrl = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
-    }
+-- game list
+local games = {
+    [142823291] = {"Murder Mystery 2", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/mm2.lua"},
+    [79546208627805] = {"99 Nights", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/99nights.lua"},
+    [76558904092080] = {"Forge", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/forge.lua"},
+    [129009554587176] = {"Forge", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/forge.lua"},
+    [2753915549] = {"Blox Fruits", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"},
+    [4442272183] = {"Blox Fruits", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"},
+    [7449423635] = {"Blox Fruits", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"}
 }
 
--- Check if current game is supported
-if Games[PlaceId] then
-    local gameInfo = Games[PlaceId]
+-- check if we support this game
+local gameData = games[PlaceId]
+
+if not gameData then
+    notify("Astral Studios", "Game not supported :(", 5)
+    warn("[Astral] Unsupported PlaceId:", PlaceId)
+    return
+end
+
+local gameName = gameData[1]
+local scriptUrl = gameData[2]
+
+-- show loading message
+notify("Astral Studios", "Loading " .. gameName .. "...", 3)
+print("[Astral] Loading script for:", gameName)
+
+-- try to load the script
+task.wait(0.5) -- small delay so notification shows
+
+local worked, err = pcall(function()
+    local scriptCode = game:HttpGet(scriptUrl)
     
-    Notify("ASTRAL | STUDIOS", "Loading " .. gameInfo.Name .. " script...", 3)
-    
-   -- load the script
-    local success, result = pcall(function()
-        return loadstring(game:HttpGet(gameInfo.ScriptUrl))()
-    end)
-    
-    if success then
-        Notify("ASTRAL | STUDIOS", gameInfo.Name .. " script loaded!", 3)
-    else
-        Notify("ASTRAL | STUDIOS", "Failed to load script: " .. tostring(result), 5)
-        warn("Astral Loader Error:", result)
+    if not scriptCode or scriptCode == "" then
+        error("Script URL returned empty")
     end
+    
+    local loadedFunc, loadErr = loadstring(scriptCode)
+    
+    if not loadedFunc then
+        error("Failed to compile: " .. tostring(loadErr))
+    end
+    
+    -- run it
+    loadedFunc()
+end)
+
+if worked then
+    notify("Astral Studios", gameName .. " loaded!", 3)
+    print("[Astral] Successfully loaded:", gameName)
 else
-   
-    Notify("ASTRAL | STUDIOS", "This game is not supported yet!", 5)
-    warn("Astral Loader: Unsupported game - PlaceId:", PlaceId)
+    notify("Astral Studios", "Error loading script", 5)
+    warn("[Astral] Load failed:", err)
 end
