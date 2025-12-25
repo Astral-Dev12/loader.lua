@@ -1,14 +1,21 @@
 local PlaceId = game.PlaceId
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local player = game:GetService("Players").LocalPlayer
 
--- simple notification
+-- notification
 local function notify(title, msg, time)
-    game.StarterGui:SetCore("SendNotification", {
-        Title = title,
-        Text = msg,
-        Duration = time or 5
-    })
+    pcall(function()
+        game.StarterGui:SetCore("SendNotification", {
+            Title = title,
+            Text = msg,
+            Duration = time or 5
+        })
+    end)
+end
+
+-- print everything for debugging
+local function log(msg)
+    print("[Astral]", msg)
+    warn("[Astral]", msg) -- shows in yellow
 end
 
 -- game list
@@ -22,46 +29,79 @@ local games = {
     [7449423635] = {"Blox Fruits", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"}
 }
 
--- check if we support this game
+log("Loader started")
+log("Current PlaceId: " .. tostring(PlaceId))
+
+-- check if game is supported
 local gameData = games[PlaceId]
 
 if not gameData then
-    notify("Astral Studios", "Game not supported :(", 5)
-    warn("[Astral] Unsupported PlaceId:", PlaceId)
+    notify("Astral Studios", "Game not supported", 5)
+    log("UNSUPPORTED GAME - PlaceId: " .. tostring(PlaceId))
     return
 end
 
 local gameName = gameData[1]
 local scriptUrl = gameData[2]
 
--- show loading message
+log("Game detected: " .. gameName)
+log("Script URL: " .. scriptUrl)
+
 notify("Astral Studios", "Loading " .. gameName .. "...", 3)
-print("[Astral] Loading script for:", gameName)
 
--- try to load the script
-task.wait(0.5) -- small delay so notification shows
+-- wait for character to load
+if not player.Character then
+    log("Waiting for character...")
+    player.CharacterAdded:Wait()
+end
 
-local worked, err = pcall(function()
-    local scriptCode = game:HttpGet(scriptUrl)
-    
-    if not scriptCode or scriptCode == "" then
-        error("Script URL returned empty")
-    end
-    
-    local loadedFunc, loadErr = loadstring(scriptCode)
-    
-    if not loadedFunc then
-        error("Failed to compile: " .. tostring(loadErr))
-    end
-    
-    -- run it
-    loadedFunc()
+task.wait(1) -- give it a second
+
+-- load the script
+log("Fetching script from GitHub...")
+
+local worked, scriptCode = pcall(function()
+    return game:HttpGet(scriptUrl, true)
 end)
 
-if worked then
+if not worked then
+    notify("Astral Studios", "Failed to fetch script", 5)
+    log("ERROR fetching: " .. tostring(scriptCode))
+    return
+end
+
+log("Script fetched, length: " .. #scriptCode .. " characters")
+
+if not scriptCode or scriptCode == "" or #scriptCode < 100 then
+    notify("Astral Studios", "Script is empty or too short", 5)
+    log("ERROR: Script content invalid")
+    log("Content: " .. tostring(scriptCode))
+    return
+end
+
+-- compile the script
+log("Compiling script...")
+
+local loadSuccess, loadedFunc = pcall(function()
+    return loadstring(scriptCode)
+end)
+
+if not loadSuccess or not loadedFunc then
+    notify("Astral Studios", "Failed to compile script", 5)
+    log("ERROR compiling: " .. tostring(loadedFunc))
+    return
+end
+
+log("Script compiled successfully")
+log("Executing script...")
+
+-- execute it
+local execSuccess, execError = pcall(loadedFunc)
+
+if execSuccess then
     notify("Astral Studios", gameName .. " loaded!", 3)
-    print("[Astral] Successfully loaded:", gameName)
+    log("SUCCESS: Script executed")
 else
-    notify("Astral Studios", "Error loading script", 5)
-    warn("[Astral] Load failed:", err)
+    notify("Astral Studios", "Script execution error", 5)
+    log("ERROR executing: " .. tostring(execError))
 end
