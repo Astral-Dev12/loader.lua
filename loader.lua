@@ -21,7 +21,7 @@ local games = {
     [79091703265657] = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua",
     
     -- Blox Fruits World 3
-    [100117331123089] = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
+    [100117331123089] = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/loader.lua",
 }
 
 local url = games[game.PlaceId]
