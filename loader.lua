@@ -63,20 +63,36 @@ local SupportedGames = {
         URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/forge.lua"
     },
     
-    -- Blox Fruits (Sea 1)
+    -- Blox Fruits (Sea 1 - Starter)
     [2753915549] = {
         Name = "Blox Fruits",
         URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
     },
     
-    -- Blox Fruits (Sea 2)
+    -- Blox Fruits (Sea 2 - New World)
     [4442272183] = {
         Name = "Blox Fruits",
         URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
     },
     
-    -- Blox Fruits (Sea 3)
+    -- Blox Fruits (Sea 3 - Third Sea)
     [7449423635] = {
+        Name = "Blox Fruits",
+        URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
+    },
+    
+    -- Blox Fruits (Additional PlaceIds for different areas)
+    [5931990869] = {
+        Name = "Blox Fruits",
+        URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
+    },
+    
+    [6381829480] = {
+        Name = "Blox Fruits",
+        URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
+    },
+    
+    [11828384869] = {
         Name = "Blox Fruits",
         URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
     }
@@ -89,12 +105,28 @@ local SupportedGames = {
 log("Loader started")
 log("PlaceId: " .. tostring(PlaceId))
 
--- Check if game is supported
+-- Try to get GameId for multi-place games
+local GameId = game.GameId
+log("GameId: " .. tostring(GameId))
+
+-- Check if game is supported by PlaceId first
 local gameData = SupportedGames[PlaceId]
+
+-- If not found, check by GameId (for Blox Fruits multi-place support)
+if not gameData then
+    -- Blox Fruits GameId is 2753915549
+    if GameId == 606849621 or GameId == 2753915549 then
+        gameData = {
+            Name = "Blox Fruits",
+            URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
+        }
+        log("Detected Blox Fruits via GameId")
+    end
+end
 
 if not gameData then
     notify("Astral Studios", "❌ Game not supported", 5)
-    log("Unsupported game: " .. tostring(PlaceId), true)
+    log("Unsupported game: PlaceId=" .. tostring(PlaceId) .. ", GameId=" .. tostring(GameId), true)
     log("Supported games: MM2, 99 Nights, Forge, Blox Fruits", false)
     return
 end
