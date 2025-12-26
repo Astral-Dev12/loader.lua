@@ -1,107 +1,174 @@
-local PlaceId = game.PlaceId
-local player = game:GetService("Players").LocalPlayer
+-- ============================================================================
+-- ASTRAL | STUDIOS - UNIVERSAL LOADER (FIXED)
+-- ============================================================================
 
--- notification
-local function notify(title, msg, time)
+local PlaceId = game.PlaceId
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- ============================================================================
+-- NOTIFICATION SYSTEM
+-- ============================================================================
+
+local function notify(title, msg, duration)
     pcall(function()
-        game.StarterGui:SetCore("SendNotification", {
+        game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = title,
             Text = msg,
-            Duration = time or 5
+            Duration = duration or 5,
+            Icon = "rbxassetid://6031075938"
         })
     end)
 end
 
--- print everything for debugging
-local function log(msg)
-    print("[Astral]", msg)
-    warn("[Astral]", msg) -- shows in yellow
+-- ============================================================================
+-- LOGGING SYSTEM
+-- ============================================================================
+
+local function log(msg, isError)
+    local prefix = "[Astral Studios]"
+    if isError then
+        warn(prefix, "❌", msg)
+    else
+        print(prefix, "✅", msg)
+    end
 end
 
--- game list
-local games = {
-    [142823291] = {"Murder Mystery 2", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/mm2.lua"},
-    [79546208627805] = {"99 Nights", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/99nights.lua"},
-    [76558904092080] = {"Forge", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/forge.lua"},
-    [129009554587176] = {"Forge", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/forge.lua"},
-    [2753915549] = {"Blox Fruits", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"},
-    [4442272183] = {"Blox Fruits", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"},
-    [7449423635] = {"Blox Fruits", "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"}
+-- ============================================================================
+-- SUPPORTED GAMES
+-- ============================================================================
+
+local SupportedGames = {
+    -- Murder Mystery 2
+    [142823291] = {
+        Name = "Murder Mystery 2",
+        URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/mm2.lua"
+    },
+    
+    -- 99 Nights
+    [79546208627805] = {
+        Name = "99 Nights",
+        URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/99nights.lua"
+    },
+    
+    -- Forge (World 1)
+    [76558904092080] = {
+        Name = "Forge",
+        URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/forge.lua"
+    },
+    
+    -- Forge (World 2)
+    [129009554587176] = {
+        Name = "Forge",
+        URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/forge.lua"
+    },
+    
+    -- Blox Fruits (Sea 1)
+    [2753915549] = {
+        Name = "Blox Fruits",
+        URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
+    },
+    
+    -- Blox Fruits (Sea 2)
+    [4442272183] = {
+        Name = "Blox Fruits",
+        URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
+    },
+    
+    -- Blox Fruits (Sea 3)
+    [7449423635] = {
+        Name = "Blox Fruits",
+        URL = "https://raw.githubusercontent.com/Astral-Dev12/loader.lua/main/bloxfruits.lua"
+    }
 }
 
-log("Loader started")
-log("Current PlaceId: " .. tostring(PlaceId))
+-- ============================================================================
+-- MAIN LOADER
+-- ============================================================================
 
--- check if game is supported
-local gameData = games[PlaceId]
+log("Loader started")
+log("PlaceId: " .. tostring(PlaceId))
+
+-- Check if game is supported
+local gameData = SupportedGames[PlaceId]
 
 if not gameData then
-    notify("Astral Studios", "Game not supported", 5)
-    log("UNSUPPORTED GAME - PlaceId: " .. tostring(PlaceId))
+    notify("Astral Studios", "❌ Game not supported", 5)
+    log("Unsupported game: " .. tostring(PlaceId), true)
+    log("Supported games: MM2, 99 Nights, Forge, Blox Fruits", false)
     return
 end
 
-local gameName = gameData[1]
-local scriptUrl = gameData[2]
+log("Game detected: " .. gameData.Name)
+notify("Astral Studios", "Loading " .. gameData.Name .. "...", 3)
 
-log("Game detected: " .. gameName)
-log("Script URL: " .. scriptUrl)
-
-notify("Astral Studios", "Loading " .. gameName .. "...", 3)
-
--- wait for character to load
+-- Wait for character
 if not player.Character then
-    log("Waiting for character...")
-    player.CharacterAdded:Wait()
+    log("Waiting for character to load...")
+    local success = pcall(function()
+        player.CharacterAdded:Wait()
+    end)
+    if not success then
+        log("Character loading failed", true)
+    end
 end
 
-task.wait(1) -- give it a second
+-- Small delay for stability
+task.wait(0.5)
 
--- load the script
-log("Fetching script from GitHub...")
+-- Fetch script from GitHub
+log("Fetching script from: " .. gameData.URL)
 
-local worked, scriptCode = pcall(function()
-    return game:HttpGet(scriptUrl, true)
+local fetchSuccess, scriptCode = pcall(function()
+    return game:HttpGet(gameData.URL, true)
 end)
 
-if not worked then
-    notify("Astral Studios", "Failed to fetch script", 5)
-    log("ERROR fetching: " .. tostring(scriptCode))
+if not fetchSuccess then
+    notify("Astral Studios", "❌ Failed to fetch script", 5)
+    log("Fetch error: " .. tostring(scriptCode), true)
+    log("Check your internet connection or GitHub status", true)
     return
 end
 
-log("Script fetched, length: " .. #scriptCode .. " characters")
-
+-- Validate script content
 if not scriptCode or scriptCode == "" or #scriptCode < 100 then
-    notify("Astral Studios", "Script is empty or too short", 5)
-    log("ERROR: Script content invalid")
-    log("Content: " .. tostring(scriptCode))
+    notify("Astral Studios", "❌ Invalid script content", 5)
+    log("Script is empty or too short (" .. #scriptCode .. " chars)", true)
     return
 end
 
--- compile the script
+log("Script fetched successfully (" .. #scriptCode .. " characters)")
+
+-- Compile the script
 log("Compiling script...")
 
-local loadSuccess, loadedFunc = pcall(function()
+local compileSuccess, compiledFunction = pcall(function()
     return loadstring(scriptCode)
 end)
 
-if not loadSuccess or not loadedFunc then
-    notify("Astral Studios", "Failed to compile script", 5)
-    log("ERROR compiling: " .. tostring(loadedFunc))
+if not compileSuccess or type(compiledFunction) ~= "function" then
+    notify("Astral Studios", "❌ Compilation failed", 5)
+    log("Compile error: " .. tostring(compiledFunction), true)
     return
 end
 
 log("Script compiled successfully")
-log("Executing script...")
 
--- execute it
-local execSuccess, execError = pcall(loadedFunc)
+-- Execute the script
+log("Executing " .. gameData.Name .. " script...")
 
-if execSuccess then
-    notify("Astral Studios", gameName .. " loaded!", 3)
-    log("SUCCESS: Script executed")
+local executeSuccess, executeError = pcall(compiledFunction)
+
+if executeSuccess then
+    notify("Astral Studios", "✅ " .. gameData.Name .. " loaded!", 3)
+    log(gameData.Name .. " executed successfully")
 else
-    notify("Astral Studios", "Script execution error", 5)
-    log("ERROR executing: " .. tostring(execError))
+    notify("Astral Studios", "❌ Execution error", 5)
+    log("Execution error: " .. tostring(executeError), true)
 end
+
+-- ============================================================================
+-- END OF LOADER
+-- ============================================================================
+
+log("Loader finished")
