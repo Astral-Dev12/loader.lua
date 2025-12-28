@@ -1,0 +1,33 @@
+local gameId = game.PlaceId
+
+if gameId == 142823291 then -- mm2
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/CStudios-Dev/loader.lua/main/mm2.lua"))()
+    
+elseif gameId == 79546208627805 then -- 99nights
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/CStudios-Dev/loader.lua/main/99nights.lua"))()
+    
+elseif gameId == 76558904092080 then -- forge world 1
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/CStudios-Dev/loader.lua/main/forge.lua"))()
+
+elseif gameId == 129009554587176 then -- forge world 2
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/CStudios-Dev/loader.lua/main/forge.lua"))()
+
+elseif gameId ==  then -- forge world 3
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/CStudios-Dev/loader.lua/main/forge.lua"))()
+
+elseif gameId == 2753915549 then -- bloxfruits sea 1
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/CStudios-Dev/loader.lua/main/bloxfruits.lua"))()
+    
+elseif gameId == 79091703265657 then -- bloxfruits sea 2
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/CStudios-Dev/loader.lua/main/bloxfruits.lua"))()
+
+elseif gameId == 100117331123089 then -- bloxfruits sea 3
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/CStudios-Dev/loader.lua/main/bloxfruits.lua"))()
+
+else
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Not Supported";
+        Text = "This game is not supported!";
+        Duration = 5;
+    })
+end
